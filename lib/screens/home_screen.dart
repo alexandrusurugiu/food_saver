@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import 'products_category_screen.dart';
+import 'recipes_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,9 +38,16 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.transparent, 
         actions: [
           IconButton(
-            icon: const Icon(Icons.restaurant_menu),
+            icon: const Icon(Icons.restaurant_menu, color: Colors.black87),
             tooltip: 'Idei de rețete',
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecipesScreen(pantry: myPantry), 
+                ),
+              );
+            },
           )
         ],
       ),
