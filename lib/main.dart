@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(const FoodInventoryApp());
@@ -10,34 +11,12 @@ class FoodInventoryApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Pantry App',
+      title: 'Food Saver',
       theme: ThemeData(
         primarySwatch: Colors.green,
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Frigiderul Meu'),
-      ),
-      body: const Center(
-        child: Text('Aici vor apărea alimentele tale.'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          print('Deschide camera!');
-        },
-        child: const Icon(Icons.qr_code_scanner),
-      ),
+      home: const SplashScreen(),
     );
   }
 }
