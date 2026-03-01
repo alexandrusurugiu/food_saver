@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/product.dart';
 import 'screens/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+
+  Hive.registerAdapter(FoodCategoryAdapter());
+  Hive.registerAdapter(ProductAdapter());
+
+  await Hive.openBox<Product>('pantryBox');
+
   runApp(const FoodInventoryApp());
 }
 
