@@ -1,33 +1,19 @@
 import 'package:flutter/material.dart';
+import '../models/ai_recipe.dart';
 
 class RecipeDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> recipe;
-  final String savedIngredient;
+  final AiRecipe recipe;
 
-  const RecipeDetailsScreen({
-    super.key,
-    required this.recipe,
-    required this.savedIngredient,
-  });
+  const RecipeDetailsScreen({super.key, required this.recipe});
 
   @override
   Widget build(BuildContext context) {
-    final title = recipe['title'] ?? 'Rețetă';
-    final time = recipe['time'] ?? '-';
-    final difficulty = recipe['difficulty'] ?? '-';
-    final image = recipe['image'] ?? '🍽️';
-    final ingredients = recipe['ingredients'] ?? 'Nu există ingrediente.';
-    final instructions = recipe['instructions'] ?? 'Nu există mod de preparare.';
-
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF6F8F5),
       appBar: AppBar(
-        title: const Text(
-          'Detalii rețetă',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        title: const Text('Detalii rețetă AI', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.black87,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -38,111 +24,96 @@ class RecipeDetailsScreen extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(24),
-              ),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.grey.shade200)),
               child: Column(
                 children: [
-                  Text(
-                    image,
-                    style: const TextStyle(fontSize: 64),
-                  ),
+                  const Text('🍽️', style: TextStyle(fontSize: 64)),
                   const SizedBox(height: 12),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  if (savedIngredient.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Recomandată pentru: $savedIngredient',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.orange.shade800,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                  Text(recipe.title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.black87)),
+                  const SizedBox(height: 12),
+                  Text(recipe.description, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
                 ],
               ),
             ),
-
-            const SizedBox(height: 18),
-
+            const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.timer_outlined,
-                    title: 'Timp',
-                    value: time,
-                  ),
-                ),
+                Expanded(child: _InfoCard(icon: Icons.timer_outlined, title: 'Timp', value: '${recipe.cookingTime} min')),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.speed,
-                    title: 'Dificultate',
-                    value: difficulty,
-                  ),
-                ),
+                Expanded(child: _InfoCard(icon: Icons.speed, title: 'Dificultate', value: recipe.difficulty)),
               ],
             ),
-
             const SizedBox(height: 24),
+            
+            if (recipe.usedIngredients.isNotEmpty) ...[
+              const Text('Din frigiderul tău', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black87)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8, runSpacing: 8,
+                children: recipe.usedIngredients.map((ing) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.green.shade200)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
+                      const SizedBox(width: 6),
+                      Text(ing, style: TextStyle(color: Colors.green.shade900, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                )).toList(),
+              ),
+              const SizedBox(height: 24),
+            ],
 
-            const Text(
-              'Ingrediente',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+            if (recipe.missingIngredients.isNotEmpty) ...[
+              const Text('Îți lipsește', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black87)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8, runSpacing: 8,
+                children: recipe.missingIngredients.map((ing) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.shopping_cart_outlined, size: 16, color: Colors.grey.shade700),
+                      const SizedBox(width: 6),
+                      Text(ing, style: TextStyle(color: Colors.grey.shade800, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                )).toList(),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            const Text('Mod de preparare', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black87)),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.grey.shade200)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                // MAPĂM LISTA DE INSTRUCȚIUNI AI AICI
+                children: recipe.instructions.asMap().entries.map((entry) {
+                  int stepNumber = entry.key + 1;
+                  String instruction = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(radius: 12, backgroundColor: Colors.green.shade100, child: Text('$stepNumber', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green.shade800))),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(instruction, style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.black87))),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
             ),
-            const SizedBox(height: 10),
-
-            _SectionCard(
-              child: Text(
-                ingredients,
-                style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.6,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            const Text(
-              'Mod de preparare',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            _SectionCard(
-              child: Text(
-                instructions,
-                style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.6,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 30),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -154,63 +125,22 @@ class _InfoCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String value;
-
-  const _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
+  const _InfoCard({required this.icon, required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.grey.shade200)),
       child: Column(
         children: [
-          Icon(icon, color: Colors.orange.shade700),
+          Icon(icon, color: Colors.green.shade600),
           const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.grey,
-            ),
-          ),
+          Text(title, style: const TextStyle(fontSize: 13, color: Colors.grey)),
           const SizedBox(height: 4),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
+          Text(value, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87)),
         ],
       ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final Widget child;
-
-  const _SectionCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: child,
     );
   }
 }

@@ -37,15 +37,26 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
     _selectedUnit = 'buc';
   }
 
-  // Funcție pentru deschiderea calendarului nativ Android/Samsung
   Future<void> _selectExpiryDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now().subtract(
         const Duration(days: 30),
-      ), // Permite stocarea produselor cumpărate recent
+      ),
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.green.shade600,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _expiryDate) {
       setState(() {
@@ -54,13 +65,13 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
     }
   }
 
-  // Salvarea finală în bazele de date locală
   Future<void> _saveProductToPantry() async {
     if (!_formKey.currentState!.validate() || _expiryDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Te rog selectează data de expirare!'),
+          content: Text('Te rog selectează data de expirare!', style: TextStyle(fontWeight: FontWeight.bold)),
           backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
@@ -69,33 +80,60 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
     final pantryBox = Hive.box<Product>('pantryBox');
     final cacheBox = Hive.box<String>('cachedBarcodes');
 
-    // 1. Salvăm codul de bare în cache-ul local împreună cu numele ales/editat de user
     await cacheBox.put(widget.barcode, _nameController.text.trim());
 
-    // 2. Creăm obiectul final de tip Product
     final newProduct = Product(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
       category: _selectedCategory,
       expiryDate: _expiryDate!,
-      imageUrl: '', // Poți adăuga un URL de imagine dacă dorești pe viitor
+      imageUrl: '',
       quantity: _quantity,
       unit: _selectedUnit,
     );
 
-    // 3. Salvăm în cămară (pantryBox)
     await pantryBox.add(newProduct);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Produs adăugat cu succes în cămară!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Produs adăugat cu succes!', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
-      // Ne întoarcem direct la HomeScreen (eliminăm ecranele intermediare de scanare)
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
+  }
+
+  // Am creat un stil reutilizabil pentru input-uri pentru a păstra codul curat
+  InputDecoration _customInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.grey.shade700),
+      prefixIcon: Icon(icon, color: Colors.green.shade600),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: Colors.green.shade400, width: 2),
+      ),
+    );
   }
 
   @override
@@ -103,216 +141,242 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
     final formatter = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Confirmare Produs Scanat'),
+        title: const Text('Confirmare Produs', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.black87,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Cod bare: ${widget.barcode}',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 1. Câmp text pentru Nume Produs (Precompletat, editabil)
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nume Produs',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.shopping_bag_outlined),
-                ),
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Introdu numele produsului'
-                    : null,
-              ),
-              const SizedBox(height: 20),
-
-              // 2. Dropdown pentru Categorie
-              DropdownButtonFormField<FoodCategory>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Categorie',
-                  border: OutlineInputBorder(),
-                ),
-                items: FoodCategory.values.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category.name.toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) setState(() => _selectedCategory = value);
-                },
-              ),
-              const SizedBox(height: 25),
-
-              // 3. Selector Dată de Expirare (Calendar)
-              const Text(
-                'Dată expirare',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () => _selectExpiryDate(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _expiryDate == null
-                            ? 'Alege data de pe ambalaj'
-                            : formatter.format(_expiryDate!),
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: _expiryDate == null
-                              ? Colors.grey.shade600
-                              : Colors.black,
-                        ),
-                      ),
-                      const Icon(Icons.calendar_today, color: Colors.green),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 25),
-
-              // 4. Gestiune Cantitate & Unitate de măsură
-              const Text(
-                'Gestiune Stoc inițial',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Container(
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFE8F5E9), // Același verde-pal de pe Home
+              Colors.white,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.remove_circle_outline,
-                          size: 32,
-                          color: Colors.red,
-                        ),
-                        onPressed: () {
-                          if (_quantity > 0.5) {
-                            setState(
-                              () => _quantity -=
-                                  (_selectedUnit == 'kg' ||
-                                      _selectedUnit == 'L' ||
-                                      _selectedUnit == 'g'
-                                  ? 0.5
-                                  : 1.0),
-                            );
-                          }
-                        },
+                  
+                  // --- CARD 1: Detalii Principale ---
+                  Card(
+                    elevation: 2,
+                    shadowColor: Colors.green.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.qr_code, color: Colors.grey.shade500, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Cod: ${widget.barcode}',
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: _customInputDecoration('Nume Produs', Icons.shopping_bag_outlined),
+                            validator: (value) => value == null || value.isEmpty ? 'Introdu numele produsului' : null,
+                          ),
+                          const SizedBox(height: 20),
+                          DropdownButtonFormField<FoodCategory>(
+                            value: _selectedCategory,
+                            decoration: _customInputDecoration('Categorie', Icons.category_outlined),
+                            icon: const Icon(Icons.expand_more, color: Colors.grey),
+                            items: FoodCategory.values.map((category) {
+                              return DropdownMenuItem(
+                                value: category,
+                                child: Text(category.name.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w500)),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value != null) setState(() => _selectedCategory = value);
+                            },
+                          ),
+                        ],
                       ),
-                      Text(
-                        _quantity % 1 == 0
-                            ? _quantity.toInt().toString()
-                            : _quantity.toString(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add_circle_outline,
-                          size: 32,
-                          color: Colors.green,
-                        ),
-                        onPressed: () {
-                          setState(
-                            () => _quantity +=
-                                (_selectedUnit == 'kg' ||
-                                    _selectedUnit == 'L' ||
-                                    _selectedUnit == 'g'
-                                ? 0.5
-                                : 1.0),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(5),
                     ),
-                    child: DropdownButton<String>(
-                      value: _selectedUnit,
-                      underline: const SizedBox(),
-                      items:
-                          <String>[
-                                'buc',
-                                'kg',
-                                'g',
-                                'L',
-                                'ml',
-                                'sticle',
-                                'doze',
-                                'cutii',
-                              ]
-                              .map(
-                                (val) => DropdownMenuItem(
-                                  value: val,
-                                  child: Text(val),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // --- CARD 2: Data de expirare ---
+                  Card(
+                    elevation: 2,
+                    shadowColor: Colors.green.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Dată expirare', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+                          const SizedBox(height: 12),
+                          InkWell(
+                            onTap: () => _selectExpiryDate(context),
+                            borderRadius: BorderRadius.circular(15),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: _expiryDate == null ? Colors.orange.shade50 : Colors.green.shade50,
+                                border: Border.all(color: _expiryDate == null ? Colors.orange.shade200 : Colors.green.shade200),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _expiryDate == null ? 'Alege data de pe ambalaj' : formatter.format(_expiryDate!),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: _expiryDate == null ? Colors.orange.shade800 : Colors.green.shade800,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.calendar_month_rounded, 
+                                    color: _expiryDate == null ? Colors.orange.shade600 : Colors.green.shade600,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // --- CARD 3: Gestiune Stoc ---
+                  Card(
+                    elevation: 2,
+                    shadowColor: Colors.green.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Gestiune Stoc', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Selector Cantitate
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(color: Colors.grey.shade200),
                                 ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        if (value != null)
-                          setState(() => _selectedUnit = value);
-                      },
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.remove, color: Colors.green.shade700),
+                                      onPressed: () {
+                                        if (_quantity > 0.5) {
+                                          setState(() => _quantity -= (_selectedUnit == 'kg' || _selectedUnit == 'L' || _selectedUnit == 'g' ? 0.5 : 1.0));
+                                        }
+                                      },
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      child: Text(
+                                        _quantity % 1 == 0 ? _quantity.toInt().toString() : _quantity.toString(),
+                                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.add, color: Colors.green.shade700),
+                                      onPressed: () {
+                                        setState(() => _quantity += (_selectedUnit == 'kg' || _selectedUnit == 'L' || _selectedUnit == 'g' ? 0.5 : 1.0));
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Selector Unitate
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  border: Border.all(color: Colors.grey.shade200),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: DropdownButton<String>(
+                                  value: _selectedUnit,
+                                  underline: const SizedBox(),
+                                  icon: const Icon(Icons.expand_more, size: 20),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 16),
+                                  items: <String>['buc', 'kg', 'g', 'L', 'ml', 'sticle', 'doze', 'cutii']
+                                      .map((val) => DropdownMenuItem(value: val, child: Text(val)))
+                                      .toList(),
+                                  onChanged: (value) {
+                                    if (value != null) setState(() => _selectedUnit = value);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  
+                  const SizedBox(height: 30),
+
+                  // --- BUTON SALVARE ---
+                  Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        )
+                      ]
+                    ),
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        elevation: 0, // Umbra e gestionată de Container-ul părinte pentru a fi mai soft
+                      ),
+                      onPressed: _saveProductToPantry,
+                      icon: const Icon(Icons.add_shopping_cart, size: 24),
+                      label: const Text(
+                        'Adaugă în Cămară',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20), // Spațiu gol la final
                 ],
               ),
-              const SizedBox(height: 40),
-
-              // Butonul de adăugare finală
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                  onPressed: _saveProductToPantry,
-                  icon: const Icon(
-                    Icons.add_shopping_cart,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    'Adaugă în Cămară',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

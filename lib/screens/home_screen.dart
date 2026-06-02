@@ -440,17 +440,6 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openManualAdd,
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(
-          'Produs nou',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
     );
   }
 }
