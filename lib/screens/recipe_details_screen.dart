@@ -12,97 +12,205 @@ class RecipeDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final title = recipe['title'] ?? 'Rețetă';
+    final time = recipe['time'] ?? '-';
+    final difficulty = recipe['difficulty'] ?? '-';
+    final image = recipe['image'] ?? '🍽️';
+    final ingredients = recipe['ingredients'] ?? 'Nu există ingrediente.';
+    final instructions = recipe['instructions'] ?? 'Nu există mod de preparare.';
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text(
+          'Detalii rețetă',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        elevation: 0,
       ),
-      extendBodyBehindAppBar: true, 
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: double.infinity,
-              height: 250,
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(24),
               ),
-              child: Center(
-                child: Text(recipe['image']!, style: const TextStyle(fontSize: 100)),
-              ),
-            ),
-            
-            Padding(
-              padding: const EdgeInsets.all(20.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipe['title']!,
-                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, height: 1.2),
+                    image,
+                    style: const TextStyle(fontSize: 64),
                   ),
-                  const SizedBox(height: 15),
-
-                  Row(
-                    children: [
-                      const Icon(Icons.timer_outlined, color: Colors.grey, size: 20),
-                      const SizedBox(width: 5),
-                      Text(recipe['time']!, style: const TextStyle(color: Colors.grey, fontSize: 16)),
-                      const SizedBox(width: 20),
-                      const Icon(Icons.speed, color: Colors.grey, size: 20),
-                      const SizedBox(width: 5),
-                      Text(recipe['difficulty']!, style: const TextStyle(color: Colors.grey, fontSize: 16)),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.eco, color: Colors.green),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Gătind asta, salvezi: $savedIngredient',
-                            style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.w600, fontSize: 15),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 12),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 30),
-
-                  const Text('Ingrediente', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Text(
-                    recipe['ingredients']!,
-                    style: const TextStyle(fontSize: 16, color: Colors.black87, height: 1.5),
-                  ),
-                  const SizedBox(height: 30),
-
-                  const Text('Mod de preparare', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Text(
-                    recipe['instructions']!,
-                    style: const TextStyle(fontSize: 16, color: Colors.black87, height: 1.5),
-                  ),
-                  const SizedBox(height: 40),
+                  if (savedIngredient.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Recomandată pentru: $savedIngredient',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.orange.shade800,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
+
+            const SizedBox(height: 18),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoCard(
+                    icon: Icons.timer_outlined,
+                    title: 'Timp',
+                    value: time,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _InfoCard(
+                    icon: Icons.speed,
+                    title: 'Dificultate',
+                    value: difficulty,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Ingrediente',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            _SectionCard(
+              child: Text(
+                ingredients,
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.6,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Mod de preparare',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            _SectionCard(
+              child: Text(
+                instructions,
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.6,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 30),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+
+  const _InfoCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.orange.shade700),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final Widget child;
+
+  const _SectionCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: child,
     );
   }
 }
