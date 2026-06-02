@@ -20,7 +20,7 @@ class ScannerScreen extends StatelessWidget {
             if (barcode.rawValue != null) {
               final String code = barcode.rawValue!;
               onBarcodeScanned(code);
-              Navigator.pop(context); // Inchide camera dupa ce a scanat
+              Navigator.pop(context);
               break;
             }
           }
