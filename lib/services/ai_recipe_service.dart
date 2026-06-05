@@ -2,17 +2,18 @@ import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/product.dart';
 import '../models/ai_recipe.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AiRecipeService {
-  static const String _apiKey = 'AIzaSyAD6TvHe599pd5kCV9zJOPwoYMvms68JzY'; 
-
   Future<List<AiRecipe>> generateRecipes(List<Product> pantry) async {
     if (pantry.isEmpty) return [];
+
+    final apiKey = dotenv.env['API_KEY'] ?? '';
 
     final urgent = pantry.where((p) => p.daysUntilExpiry <= 3).map((p) => p.name).toList();
     final altele = pantry.where((p) => p.daysUntilExpiry > 3).map((p) => p.name).toList();
 
-    final model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: _apiKey);
+    final model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
 
     final prompt = '''
     Ești un asistent culinar inteligent într-o aplicație anti-risipă alimentară.

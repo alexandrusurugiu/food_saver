@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/product.dart';
 import 'screens/splash_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
+  await dotenv.load();
+  
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       systemNavigationBarColor:
@@ -39,7 +41,7 @@ class FoodInventoryApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Food Saver',
-      debugShowCheckedModeBanner: false, // Scoate eticheta de debug din colț
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
       home: const SplashScreen(),
     );
