@@ -113,7 +113,6 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
     }
   }
 
-  // Am creat un stil reutilizabil pentru input-uri pentru a păstra codul curat
   InputDecoration _customInputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
@@ -156,7 +155,7 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFE8F5E9), // Același verde-pal de pe Home
+              Color(0xFFE8F5E9),
               Colors.white,
               Colors.white,
             ],
@@ -171,7 +170,6 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   
-                  // --- CARD 1: Detalii Principale ---
                   Card(
                     elevation: 2,
                     shadowColor: Colors.green.withOpacity(0.1),
@@ -219,7 +217,6 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // --- CARD 2: Data de expirare ---
                   Card(
                     elevation: 2,
                     shadowColor: Colors.green.withOpacity(0.1),
@@ -267,7 +264,6 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // --- CARD 3: Gestiune Stoc ---
                   Card(
                     elevation: 2,
                     shadowColor: Colors.green.withOpacity(0.1),
@@ -283,7 +279,6 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Selector Cantitate
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.grey.shade50,
@@ -316,7 +311,6 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
                                   ],
                                 ),
                               ),
-                              // Selector Unitate
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                 decoration: BoxDecoration(
@@ -346,7 +340,6 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
                   
                   const SizedBox(height: 30),
 
-                  // --- BUTON SALVARE ---
                   Container(
                     decoration: BoxDecoration(
                       boxShadow: [
@@ -363,7 +356,7 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        elevation: 0, // Umbra e gestionată de Container-ul părinte pentru a fi mai soft
+                        elevation: 0,
                       ),
                       onPressed: _saveProductToPantry,
                       icon: const Icon(Icons.add_shopping_cart, size: 24),
@@ -373,7 +366,7 @@ class _AddProductFormScreenState extends State<AddProductFormScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20), // Spațiu gol la final
+                  const SizedBox(height: 20),
                 ],
               ),
             ),

@@ -95,7 +95,6 @@ class RecipeDetailsScreen extends StatelessWidget {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.grey.shade200)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                // MAPĂM LISTA DE INSTRUCȚIUNI AI AICI
                 children: recipe.instructions.asMap().entries.map((entry) {
                   int stepNumber = entry.key + 1;
                   String instruction = entry.value;
